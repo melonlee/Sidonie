@@ -61,5 +61,71 @@ export interface UserProfile {
   customInstructions: string;
 }
 
-export type AppView = 'chat' | 'notes';
+// --- Study Module Types ---
+
+export interface StudyTopic {
+  id: string;
+  title: { zh: string; en: string }; // Bilingual titles
+  description: { zh: string; en: string };
+  promptKey: string; // Key to help AI understand context
+}
+
+export interface StudyStage {
+  id: string;
+  title: { zh: string; en: string };
+  description: { zh: string; en: string };
+  topics: StudyTopic[];
+}
+
+export interface Course {
+  id: string;
+  name: string; // e.g. "Grade 3 Math"
+  subject: string;
+  grade: string;
+  stages: StudyStage[];
+  createdAt: number;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string; // Emoji or icon name
+  unlocked: boolean;
+  condition: string; // Description of how to unlock
+}
+
+export interface StudyActivity {
+  id: string;
+  timestamp: number;
+  topicId: string;
+  topicTitle: string;
+  type: 'quiz' | 'concept' | 'visual';
+  score?: number; // For quizzes
+  content?: string; // Saved generated content
+  quizData?: any; // Saved quiz JSON
+  userAnswerIndex?: number; // Saved user answer
+}
+
+export interface SchoolNote {
+  id: string;
+  timestamp: number;
+  subject: 'math' | 'chinese' | 'english' | 'science' | 'other';
+  content: string;
+  images: string[]; // Base64 strings
+  aiAnalysis?: string; // Saved AI interpretation
+  aiPractice?: string; // Saved generated questions
+}
+
+export interface StudyState {
+  xp: number;
+  level: number;
+  badges: Badge[];
+  activityLog: StudyActivity[]; // Generated learning history
+  schoolNotes: SchoolNote[]; // Daily teacher notes
+  courses: Course[]; // Custom generated curriculums
+  activeCourseId: string; // Currently selected course
+}
+
+export type AppView = 'chat' | 'notes' | 'painting' | 'study';
 export type Language = 'en' | 'zh';

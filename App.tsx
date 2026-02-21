@@ -37,7 +37,9 @@ import {
   Box,
   GraduationCap,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { Message, Role, Attachment, ChatSession, Note, AppView, Language, ApiKeys, UserProfile } from './types';
 import { streamChatResponse, generateImage } from './services/geminiService';
@@ -48,6 +50,7 @@ import LoadingBubble from './components/LoadingBubble';
 import ImageModal from './components/ImageModal';
 import SearchSources from './components/SearchSources';
 import NotesView from './components/NotesView';
+import StudyView from './components/StudyView';
 import PlanWidget from './components/PlanWidget';
 import Toast from './components/Toast';
 import LandingPage from './components/LandingPage';
@@ -132,7 +135,7 @@ const App: React.FC = () => {
   // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentView, setCurrentView] = useState<AppView>('chat');
-  const [isLabMenuOpen, setIsLabMenuOpen] = useState(false);
+  const [isLabMenuOpen, setIsLabMenuOpen] = useState(true); // Default open for visibility
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [exportMenuOpenId, setExportMenuOpenId] = useState<string | null>(null);
   const [showNotePicker, setShowNotePicker] = useState(false);
@@ -823,10 +826,10 @@ const App: React.FC = () => {
                <Library size={18} strokeWidth={1.5} /> {t.library}
              </button>
 
-             {/* Painting Menu */}
+             {/* Painting Menu (Embedded) */}
              <button 
-               onClick={() => window.open('http://draw.fantasyailab.com/', '_blank')}
-               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-500 hover:bg-gray-200/50 hover:text-gray-900"
+               onClick={() => setCurrentView('painting')}
+               className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${currentView === 'painting' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500 hover:bg-gray-200/50'}`}
              >
                <Palette size={18} strokeWidth={1.5} /> {t.painting}
              </button>
@@ -859,9 +862,10 @@ const App: React.FC = () => {
                     >
                       <Box size={16} strokeWidth={1.5} /> {t.lazybox}
                     </button>
+                    {/* Study Module */}
                     <button 
-                      onClick={() => window.open('http://study.fantasyailab.com/', '_blank')}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors text-gray-500 hover:bg-gray-200/50 hover:text-gray-900"
+                      onClick={() => setCurrentView('study')}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${currentView === 'study' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500 hover:bg-gray-200/50'}`}
                     >
                       <GraduationCap size={16} strokeWidth={1.5} /> {t.study}
                     </button>
@@ -943,6 +947,67 @@ const App: React.FC = () => {
              onDeleteNote={handleDeleteNote}
              language={language}
            />
+        ) : currentView === 'study' ? (
+           <StudyView 
+             language={language}
+             apiKeys={apiKeys}
+             userProfile={userProfile}
+           />
+        ) : currentView === 'painting' ? (
+            <div className="w-full h-full bg-white relative flex flex-col">
+              <div className="flex flex-col">
+                  {/* Warning for Mixed Content */}
+                  <div className="bg-amber-50 text-amber-800 text-xs px-6 py-2 border-b border-amber-100 flex items-center justify-center gap-2">
+                     <AlertTriangle size={14} className="text-amber-600" />
+                     <span>
+                       <strong>Security Note:</strong> This tool uses HTTP. If it doesn't load, your browser blocked it (Mixed Content). 
+                     </span>
+                     <a href="http://draw.fantasyailab.com/" target="_blank" rel="noopener noreferrer" className="underline font-semibold flex items-center gap-1 hover:text-amber-900">
+                        Open in New Tab <ExternalLink size={10} />
+                     </a>
+                  </div>
+
+                  <div className="flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-100">
+                      <div className="flex items-center">
+                          {!isSidebarOpen && (
+                            <button 
+                              onClick={() => setIsSidebarOpen(true)}
+                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors mr-3"
+                            >
+                              <Menu size={20} />
+                            </button>
+                          )}
+                          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            {t.painting}
+                            <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-normal border border-gray-200">HTTP Embed</span>
+                          </h2>
+                      </div>
+                      <div className="flex items-center gap-2">
+                         <button 
+                           onClick={() => {
+                             const iframe = document.getElementById('painting-iframe') as HTMLIFrameElement;
+                             if(iframe) iframe.src = iframe.src;
+                           }}
+                           className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                           title="Refresh"
+                         >
+                           <RefreshCw size={16} />
+                         </button>
+                      </div>
+                  </div>
+              </div>
+              
+              <div className="flex-1 w-full relative bg-gray-100">
+                  <iframe 
+                    id="painting-iframe"
+                    src="http://draw.fantasyailab.com/"
+                    className="w-full h-full border-none block"
+                    title="Painting Tool"
+                    // Sandbox permissions to be permissive but explicit
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                  />
+              </div>
+            </div>
         ) : (
           <>
             <div className="flex items-center px-6 py-4 bg-white/80 backdrop-blur-sm sticky top-0 z-20">

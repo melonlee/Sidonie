@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -13,6 +14,7 @@ interface MarkdownRendererProps {
   onImageClick?: (src: string) => void;
   isStreaming?: boolean;
   language?: Language;
+  codeBlockDefaultMode?: 'code' | 'preview';
 }
 
 // Robustly extract text from a HAST node (recursive)
@@ -46,8 +48,8 @@ const extractText = (children: any): string => {
 };
 
 // --- Sub-component: Code Artifact (Handles Preview & Download) ---
-const CodeArtifact = ({ language, code, inline, className, appLanguage, ...props }: any) => {
-  const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code');
+const CodeArtifact = ({ language, code, inline, className, appLanguage, defaultMode, ...props }: any) => {
+  const [activeTab, setActiveTab] = useState<'code' | 'preview'>(defaultMode || 'code');
   const [isCopied, setIsCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
@@ -219,7 +221,7 @@ const CodeArtifact = ({ language, code, inline, className, appLanguage, ...props
 
 // --- Main Renderer ---
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onImageClick, isStreaming, language }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onImageClick, isStreaming, language, codeBlockDefaultMode }) => {
   return (
     <div className="prose prose-gray max-w-none text-gray-800 leading-relaxed break-words min-w-0 w-full">
       <ReactMarkdown
@@ -244,6 +246,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onImageCli
                 inline={inline} 
                 className={className} 
                 appLanguage={language}
+                defaultMode={codeBlockDefaultMode}
                 {...props} 
               >
                 {children}
